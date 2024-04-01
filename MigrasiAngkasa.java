@@ -8,37 +8,46 @@ public class MigrasiAngkasa {
 
         n = scanner.nextInt();  
         m = scanner.nextInt();
+        scanner.nextLine();
+
+        String[] commands = null;
 
         Env.vip1List.maxSize = n;
         Env.vip2List.maxSize = n;
         Env.comList.maxSize = m;
         Env.outputList.maxSize = Integer.MAX_VALUE;
         Env.waitList.maxSize = Integer.MAX_VALUE;
+        Env.transitionList.maxSize = Integer.MAX_VALUE;
 
         Env.vipCounter = 1;
         Env.comCounter = 1;
 
-        while (scanner.hasNext()) {
-            input = scanner.next();
+        while (true) {
+            input = scanner.nextLine();
+            if (input.isEmpty()) {
+                break;
+            }
+            commands = input.split(" ");
+            input = commands[0];
             switch (input) {
                 case "REGISTER":
-                    name = scanner.next();
-                    rating = scanner.nextInt();
-                    age = scanner.nextInt();
-                    tension = scanner.next();
+                    name = commands[1];
+                    rating = Integer.parseInt(commands[2]);
+                    age = Integer.parseInt(commands[3]);
+                    tension = commands[4];
                     Command.register(name, rating, age, tension);
                     break;
 
                 case "RESIZE":
-                    input = scanner.next();
+                    input = commands[1];
                     switch (input) {
                         case "VIP":
-                            num = scanner.nextInt();
+                            num = Integer.parseInt(commands[2]);
                             Command.resizeVIP(num);
                             break;
                             
                         case "COM":
-                            num = scanner.nextInt();
+                            num = Integer.parseInt(commands[2]);
                             Command.resizeCOM(num);
                             break;
 
@@ -48,20 +57,20 @@ public class MigrasiAngkasa {
                     break;
 
                 case "INJECT":
-                    input = scanner.next();
+                    input = commands[1];
                     switch (input) {
                         case "VIP1":
-                            num = scanner.nextInt();
+                            num = Integer.parseInt(commands[2]);
                             Command.injectN(num, "VIP1");
                             break;
 
                         case "VIP2":
-                            num = scanner.nextInt();
+                            num = Integer.parseInt(commands[2]);
                             Command.injectN(num, "VIP2");
                             break;
                     
                         case "COM":
-                            num = scanner.nextInt();
+                            num = Integer.parseInt(commands[2]);
                             Command.injectN(num, "COM");
                             break;
                             
@@ -72,7 +81,7 @@ public class MigrasiAngkasa {
                     break;
 
                 case "SKIP":
-                    input = scanner.next();
+                    input = commands[1];
                     Command.skip(input);
                     break;
 
@@ -151,8 +160,8 @@ class Command {
     }
 
     static void resizeVIP(int num) {
-        Env.outputList.enqueue(new Node("RESIZE_SUCCESS VIP "+Env.vip1List.size+" TO "+num));
-        if (num < Env.vip1List.size) {
+        Env.outputList.enqueue(new Node("RESIZE_SUCCESS VIP "+Env.vip1List.maxSize+" TO "+num));
+        if (num < Env.vip1List.maxSize) {
             int counter = 1;
             for (Node i = Env.vip1List.front; i != null; i = i.next) {
                 if (counter > num) {
@@ -160,13 +169,13 @@ class Command {
                 }
                 counter++;
             }
-            for (int i = 0; i < Env.vip1List.size - num; i++) {
+            for (int i = 0; i < Env.vip1List.maxSize - num; i++) {
                 if (Env.transitionList.size == 0) break;
-                Env.waitList.enqueueWaitList(Env.transitionList.front);
-                Env.transitionList.dequeue();
                 Env.vip1List.dequeueFromRear();
+                Env.waitList.enqueue(Env.transitionList.front);
+                Env.transitionList.dequeue();
             }
-
+            
             counter = 1;
             for (Node i = Env.vip2List.front; i != null; i = i.next) {
                 if (counter > num) {
@@ -174,18 +183,21 @@ class Command {
                 }
                 counter++;
             }
-            for (int i = 0; i < Env.vip1List.size - num; i++) {
+            for (int i = 0; i < Env.vip2List.maxSize - num; i++) {
                 if (Env.transitionList.size == 0) break;
-                Env.waitList.enqueueWaitList(Env.transitionList.front);
-                Env.transitionList.dequeue();
                 Env.vip2List.dequeueFromRear();
+                Env.waitList.enqueue(Env.transitionList.front);
+                Env.transitionList.dequeue();
             }
 
             Env.vip1List.maxSize = num;
             Env.vip2List.maxSize = num;
         } else {
-            int counter = num-Env.vip1List.size;
+            int counter = num-Env.vip1List.maxSize;
 
+            Env.vip1List.maxSize = num;
+            Env.vip2List.maxSize = num;
+            
             for (Node i = Env.waitList.front; i != null; i = i.next) {
                 if (counter == 0) break;
                 if (i.priority == 3) {
@@ -203,17 +215,12 @@ class Command {
                     counter--;
                 }
             }
-
-            Env.vip1List.maxSize = num;
-            Env.vip2List.maxSize = num;
         }
     }
 
     static void resizeCOM(int num) {
-        Env.outputList.enqueue(new Node("RESIZE_SUCCESS COM "+Env.vip1List.size+" TO "+num));
-        if (num < Env.comList.size) {
-            Env.comList.maxSize = num;
-
+        Env.outputList.enqueue(new Node("RESIZE_SUCCESS COM "+Env.comList.maxSize+" TO "+num));
+        if (num < Env.comList.maxSize) {
             int counter = 1;
             for (Node i = Env.comList.front; i != null; i = i.next) {
                 if (counter > num) {
@@ -221,21 +228,22 @@ class Command {
                 }
                 counter++;
             }
-            for (int i = 0; i < Env.comList.size - num; i++) {
+            for (int i = 0; i < Env.comList.maxSize - num; i++) {
                 if (Env.transitionList.size == 0) break;
-                Env.waitList.enqueueWaitList(Env.transitionList.front);
-                Env.transitionList.dequeue();
                 Env.comList.dequeueFromRear();
+                Env.waitList.enqueue(Env.transitionList.front);
+                Env.transitionList.dequeue();
             }
-
+            
+            Env.comList.maxSize = num;
         } else {
-            int counter = num-Env.comList.size;
+            int counter = num-Env.comList.maxSize;
 
             Env.comList.maxSize = num;
-
+            
             for (Node i = Env.waitList.front; i != null; i = i.next) {
                 if (counter == 0) break;
-                if (i.priority == 3) {
+                if (i.priority == 1) {
                     Env.comList.enqueue(i);
                     Env.waitList.removeNode(i);
                     counter--;
@@ -361,7 +369,14 @@ class Command {
 
     static void skip(String ticket) {
         for (Node i = Env.vip1List.front; i != null; i = i.next) {
-            if (i.ticket.equals(ticket)) {
+            if (i.ticket.split("#")[1].equals(ticket)) {
+                for (Node j = Env.waitList.front; j != null; j = j.next) {
+                    if (j.priority == 3) {
+                        Env.vip1List.enqueueIgnoreSize(j);
+                        Env.waitList.removeNode(j);
+                        break;
+                    }
+                }
                 Env.waitList.enqueueWaitList(i);
                 Env.vip1List.removeNode(i);
                 Env.outputList.enqueue(new Node("SKIP SUCCESS"));
@@ -369,7 +384,14 @@ class Command {
             }
         }
         for (Node i = Env.vip2List.front; i != null; i = i.next) {
-            if (i.ticket.equals(ticket)) {
+            if (i.ticket.split("#")[1].equals(ticket)) {
+                for (Node j = Env.waitList.front; j != null; j = j.next) {
+                    if (j.priority == 2) {
+                        Env.vip2List.enqueueIgnoreSize(j);
+                        Env.waitList.removeNode(j);
+                        break;
+                    }
+                }
                 Env.waitList.enqueueWaitList(i);
                 Env.vip2List.removeNode(i);
                 Env.outputList.enqueue(new Node("SKIP SUCCESS"));
@@ -377,7 +399,14 @@ class Command {
             }
         }
         for (Node i = Env.comList.front; i != null; i = i.next) {
-            if (i.ticket.equals(ticket)) {
+            if (i.ticket.split("#")[1].equals(ticket)) {
+                for (Node j = Env.waitList.front; j != null; j = j.next) {
+                    if (j.priority == 1) {
+                        Env.comList.enqueueIgnoreSize(j);
+                        Env.waitList.removeNode(j);
+                        break;
+                    }
+                }
                 Env.waitList.enqueueWaitList(i);
                 Env.comList.removeNode(i);
                 Env.outputList.enqueue(new Node("SKIP SUCCESS"));
@@ -532,6 +561,22 @@ class Queue {
         }
         if (size == maxSize) {
             enqueueWaitList(passenger);
+            return;
+        }
+        rear.next = passenger;
+        passenger.prev = rear;
+        rear = passenger;
+        size++;
+        return;
+    }
+
+    void enqueueIgnoreSize(Node old_passenger) {
+        Node passenger = new Node();
+        passenger.name = old_passenger.name;
+        passenger.ticket = old_passenger.ticket;
+        passenger.priority = old_passenger.priority;
+        if (size == 0) {
+            addFront(passenger);
             return;
         }
         rear.next = passenger;
