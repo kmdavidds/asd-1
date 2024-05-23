@@ -1,0 +1,36 @@
+20
+10
+insert graphy baca makan memancing
+insert zaka makan menonton baca
+insert mario makan baca bersepeda
+insert hadiyan baca bersepeda menonton
+insert yaya makan menulis belajar
+insert heru bersepeda baca makan
+insert rozi makan tidur baca
+connect graphy mario
+connect mario zaka
+connect mario rozi
+connect zaka rozi
+connect zaka hadiyan
+connect hadiyan zaka
+connect heru rozi
+connect yaya rozi
+connect yaya heru
+connect heru yaya
+mostfollowed
+insert dolly baca menonton makan
+insert wini memancing baca tidur
+numgroup
+mincuit rozi graphy
+insert bolly baca tidur memancing
+insert biti memancing menonton makan
+insert tini mengembara memancing tidur
+connect dolly bolly
+connect bolly dolly
+connect biti tini
+connect tini wini
+connect biti wini
+connect wini biti
+numgroup
+mostfollowed
+mincuit graphy rozi
