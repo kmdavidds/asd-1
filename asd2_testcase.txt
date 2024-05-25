@@ -1,4 +1,4 @@
-20
+12
 10
 insert graphy baca makan memancing
 insert zaka makan menonton baca
@@ -34,3 +34,6 @@ connect wini biti
 numgroup
 mostfollowed
 mincuit graphy rozi
+grouptopic
+mincuit zaka rozi
+suggestfriend mario
