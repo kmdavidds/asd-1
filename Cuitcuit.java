@@ -13,7 +13,7 @@ public class Cuitcuit {
         String[] commands = null;
 
         int numOfUsers = Integer.parseInt(scanner.nextLine());
-        Integer.parseInt(scanner.nextLine());
+        int numOfEdges = Integer.parseInt(scanner.nextLine());
         Global.graph = new Graph(numOfUsers);
 
         while (true) {
@@ -108,12 +108,30 @@ class Features {
         for (int i = 0; i < Global.graph.currentUsers; i++) {
             highestFollowers = Math.max(highestFollowers, Global.graph.users[i].numberOfFollowers);
         }
+        String names = "";
         for (int i = 0; i < Global.graph.currentUsers; i++) {
             if (Global.graph.users[i].numberOfFollowers == highestFollowers) {
-                return Global.graph.users[i].username;
+                names += Global.graph.users[i].username + ",";
             }
         }
-        return "Tidak ditemukan";
+        // names = "rozi,graphy,"
+        String[] namesArray = names.split(",");
+        for (int i = 0; i < namesArray.length; i++) {
+            for (int j = i + 1; j < namesArray.length; j++) {
+                if (namesArray[i].compareTo(namesArray[j]) > 0) {
+                    String temp = namesArray[i];
+                    namesArray[i] = namesArray[j];
+                    namesArray[j] = temp;
+                }
+            }
+        }
+        names = "";
+        for (String string : namesArray) {
+            names += string + ",";
+        }
+        // names = "graphy,rozi,"
+        
+        return names.substring(0, names.length() - 1);
     }
     static int grouping() {
         int n = Global.graph.currentUsers;
@@ -133,7 +151,7 @@ class Features {
     static int mincuit(String username1, String username2) {
         int index1 = Global.graph.getIndex(username1);
         int index2 = Global.graph.getIndex(username2);
-        return Global.graph.shortestDist(index1, index2);
+        return Global.graph.shortestDist(index1, index2) - 1;
     }
     static String suggestFriend(String username) {
         int index = Global.graph.getIndex(username);
@@ -147,7 +165,6 @@ class Node {
     String output;
     String username, minat1, minat2, minat3;
     int numberOfFollowers = 0;
-    int num;
 
     Node(int nodeIndex, Node next) {
         this.nodeIndex = nodeIndex;
@@ -192,7 +209,7 @@ class Graph {
     Node[] adjList;
     Node[] users;
     int maxUsers;
-    int currentUsers;
+    int currentUsers = 0;
 
     Graph(int maxUsers) {
         this.maxUsers = maxUsers;
@@ -214,6 +231,8 @@ class Graph {
         int fromIndex = getIndex(from);
         int toIndex = getIndex(to);
         if (fromIndex != -1 && toIndex != -1) {
+            // [0] = 3 -> 2 -> 1
+            // [0] = 4 (baru) -> 3 -> 2 -> 1
             adjList[fromIndex] = new Node(toIndex, adjList[fromIndex]);
         } else {
             System.out.println("User tidak ditemukan");
@@ -252,34 +271,41 @@ class Graph {
     }
 
     void highestInterestInComponent() {
-        boolean[] visited = new boolean[currentUsers];
+        boolean[] vis = new boolean[currentUsers];
         
         for (int i = 0; i < currentUsers; i++) {
-            if (!visited[i]) {
+            if (!vis[i]) {
                 CustomMap interestCount = new CustomMap(currentUsers);
-                dfsInterestCount(i, visited, interestCount);
-                String highestInterest = null;
+                dfsInterestCount(i, vis, interestCount);
                 String highestInterests = "";
                 int maxCount = Integer.MIN_VALUE;
                 for (Entry entry : interestCount.buckets) {
-                    while (entry != null) {
-                        if (entry.value > maxCount) {
-                            maxCount = entry.value;
-                            highestInterest = entry.key;
-                        }
-                        entry = entry.next;
+                    if (entry != null) {
+                        maxCount = Math.max(maxCount, entry.value);
                     }
                 }
-                highestInterests += highestInterest;
                 for (Entry entry : interestCount.buckets) {
-                    while (entry != null) {
-                        if (entry.value == maxCount && !entry.key.equals(highestInterest)) {
-                            highestInterests += "," + entry.key;
+                    if (entry != null) {
+                        if (entry.value == maxCount) {
+                            highestInterests += entry.key + ",";
                         }
-                        entry = entry.next;
                     }
                 }
-                Global.outputList.addLast(new Node(highestInterests));
+                String[] hIArray = highestInterests.split(",");
+                for (int j = 0; j < hIArray.length; j++) {
+                    for (int k = j + 1; k < hIArray.length; k++) {
+                        if (hIArray[j].compareTo(hIArray[k]) > 0) {
+                            String temp = hIArray[j];
+                            hIArray[j] = hIArray[k];
+                            hIArray[k] = temp;
+                        }
+                    }
+                }
+                highestInterests = "";
+                for (String string : hIArray) {
+                    highestInterests += string + ",";
+                }
+                Global.outputList.addLast(new Node(highestInterests.substring(0, highestInterests.length() - 1)));
             }
         }
     }
@@ -320,7 +346,6 @@ class Graph {
 
         for (int i = 0; i < currentUsers; i++) {
             distances[i] = Integer.MAX_VALUE;
-            visited[i] = false;
         }
 
         distances[from] = 0;
@@ -349,12 +374,13 @@ class Graph {
             }
         }
 
-        return -1;
+        return 0;
     }
 
     String findSuggestedFriends(int index) {
         String suggestedFriends = "";
         boolean[] closeFriend = new boolean[currentUsers];
+        int[] mutuals = new int[currentUsers];
         Node cur = adjList[index];
         while (cur != null) {
             closeFriend[cur.nodeIndex] = true;
@@ -367,6 +393,7 @@ class Graph {
                     Node temp = adjList[i];
                     while (temp != null) {
                         if (temp.nodeIndex == cur.nodeIndex && !closeFriend[i]) {
+                            mutuals[i]++;
                             suggestedFriends += users[i].username + ",";
                             break;
                         }
@@ -377,6 +404,16 @@ class Graph {
             cur = cur.next;
         }
         String[] friendArray = suggestedFriends.split(",");
+        for (int i = 0; i < friendArray.length; i++) {
+            for (int j = i + 1; j < friendArray.length; j++) {
+                if (mutuals[i] > mutuals[j]) {
+                    String temp = friendArray[i];
+                    friendArray[i] = friendArray[j];
+                    friendArray[j] = temp;
+                }
+            }
+        }
+        friendArray = suggestedFriends.split(",");
         for (int i = 0; i < friendArray.length; i++) {
             for (int j = i + 1; j < friendArray.length; j++) {
                 if (friendArray[i].compareTo(friendArray[j]) > 0) {
@@ -397,16 +434,16 @@ class Graph {
 class Entry {
     String key;
     int value;
-    Entry next;
 
-    Entry(String key, int value, Entry next) {
+    Entry(String key, int value) {
         this.key = key;
         this.value = value;
-        this.next = next;
     }
 }
 
 class CustomMap {
+    // [baca] = 2
+    // [memancing] = 1
     Entry[] buckets;
     int size = 0;
 
@@ -417,13 +454,10 @@ class CustomMap {
     int get(String key) {
         int bucket = getHash(key) % getBucketSize();
         Entry existingElement = buckets[bucket];
-        while (existingElement != null) {
-            if (existingElement.key.equals(key)) {
-                return existingElement.value;
-            }
-            existingElement = existingElement.next;
+        if (existingElement == null) {
+            return 0;
         }
-        return -1;
+        return existingElement.value;
     }
 
     void put(String key, int value) {
@@ -431,23 +465,14 @@ class CustomMap {
         Entry existingElement = buckets[bucket];
 
         if (existingElement == null) {
-            buckets[bucket] = new Entry(key, value, null);
+            buckets[bucket] = new Entry(key, value);
             return;
         }
 
-        while (existingElement.next != null) {
-            if (existingElement.key.equals(key)) {
-                existingElement.value = value;
-                return;
-            }
-            existingElement = existingElement.next;
+        while (buckets[bucket] == null) {
+            bucket = (bucket + 1) % getBucketSize();
         }
-
-        if (existingElement.key.equals(key)) {
-            existingElement.value = value;
-        } else {
-            existingElement.next = new Entry(key, value, null);
-        }
+        buckets[bucket] = new Entry(key, value);
     }
 
     int getHash(String key) {
