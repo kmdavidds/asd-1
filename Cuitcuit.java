@@ -114,7 +114,6 @@ class Features {
                 names += Global.graph.users[i].username + ",";
             }
         }
-        // names = "rozi,graphy,"
         String[] namesArray = names.split(",");
         for (int i = 0; i < namesArray.length; i++) {
             for (int j = i + 1; j < namesArray.length; j++) {
@@ -129,7 +128,6 @@ class Features {
         for (String string : namesArray) {
             names += string + ",";
         }
-        // names = "graphy,rozi,"
         
         return names.substring(0, names.length() - 1);
     }
@@ -231,8 +229,6 @@ class Graph {
         int fromIndex = getIndex(from);
         int toIndex = getIndex(to);
         if (fromIndex != -1 && toIndex != -1) {
-            // [0] = 3 -> 2 -> 1
-            // [0] = 4 (baru) -> 3 -> 2 -> 1
             adjList[fromIndex] = new Node(toIndex, adjList[fromIndex]);
         } else {
             System.out.println("User tidak ditemukan");
@@ -442,8 +438,6 @@ class Entry {
 }
 
 class CustomMap {
-    // [baca] = 2
-    // [memancing] = 1
     Entry[] buckets;
     int size = 0;
 
